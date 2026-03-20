@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = "Login";
+    var returnUrl = ViewData["ReturnUrl"] as string;
+}
+
+<div class="container py-5">
+    <h1>Login</h1>
+
+    <form method="post" asp-controller="Account" asp-action="Login" class="mt-4">
+        <input type="hidden" name="returnUrl" value="@returnUrl" />
+        <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input name="username" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input name="password" type="password" class="form-control" />
+        </div>
+        <button type="submit" class="btn btn-primary">Sign in</button>
+        <a class="btn btn-link" asp-controller="Account" asp-action="Register">Create account</a>
+    </form>
+</div>

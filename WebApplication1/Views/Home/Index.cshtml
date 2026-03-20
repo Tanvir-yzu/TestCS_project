@@ -1,0 +1,132 @@
+﻿@{
+    ViewData["Title"] = "AmosWRN — Weather Forecast";
+    var products = ViewData["Products"] as IEnumerable<WebApplication1.Models.Product> ?? Enumerable.Empty<WebApplication1.Models.Product>();
+}
+
+<div class="container py-5">
+    <div class="row align-items-center">
+        <div class="col-md-7">
+            <h1 class="display-4">AmosWRN</h1>
+            <p class="lead text-muted">Intelligent, reliable weather forecasts powered by the AmosWRN model. Get timely updates, alerts, and a clear 7-day outlook for your location.</p>
+
+            <p>
+                <a class="btn btn-primary btn-lg me-2" href="#forecast" role="button">See 7-day Forecast</a>
+                <a class="btn btn-outline-secondary btn-lg" href="#features" role="button">How it works</a>
+            </p>
+
+            <ul class="list-unstyled text-muted mt-4">
+                <li>• High-accuracy short and medium range forecasts</li>
+                <li>• Real-time alerts for severe weather</li>
+                <li>• Lightweight API and embeddable widgets</li>
+            </ul>
+        </div>
+        <div class="col-md-5 text-center d-none d-md-block">
+            <div class="card shadow-sm" style="max-width:320px; margin:auto;">
+                <div class="card-body">
+                    <h5 class="card-title">Now</h5>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h2 class="mb-0">21°C</h2>
+                            <div class="text-muted">Partly Cloudy</div>
+                        </div>
+                        <div class="text-center">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6 14a4 4 0 0 1 8 0" stroke="#ffc107" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="12" cy="8" r="3" stroke="#ffc107" stroke-width="1.5"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between text-muted small">
+                        <div>Wind: 8 km/h</div>
+                        <div>Humidity: 62%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section id="features" class="mt-5">
+        <h3>Features</h3>
+        <div class="row g-4 mt-3">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">High Accuracy</h5>
+                        <p class="card-text text-muted">AmosWRN blends observational data and model ensembles to deliver robust forecasts across time ranges.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Alerts & Notifications</h5>
+                        <p class="card-text text-muted">Subscribe to receive push and email alerts for severe weather in your area.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Embeddable Widgets</h5>
+                        <p class="card-text text-muted">Lightweight widgets make it easy to add forecasts to any site or dashboard.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="forecast" class="mt-5">
+        <h3>7-day Forecast</h3>
+        <div class="row g-3 mt-3">
+            <!-- Example static cards for a 7-day forecast -->
+            @for (int i = 0; i < 7; i++)
+            {
+                <div class="col-6 col-md-3 col-lg-2">
+                    <div class="card text-center h-100">
+                        <div class="card-body py-3">
+                            <div class="text-muted small">@DateTime.Today.AddDays(i).ToString("ddd")</div>
+                            <div class="fw-bold mt-2">@((20 + i) % 30)°C</div>
+                            <div class="text-muted small">@((i % 3) == 0 ? "Sunny" : (i % 3 == 1 ? "Cloudy" : "Rain"))</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+    <section id="products" class="mt-5">
+    <h3>Products</h3>
+
+    @if (!products.Any())
+    {
+        <p class="text-muted">
+            No products available. 
+            @if (!(User?.Identity?.IsAuthenticated == true))
+            {
+                @:<a asp-controller="Account" asp-action="Login">Sign in</a> to add products.
+            }
+        </p>
+    }
+    else
+    {
+        <div class="row g-3 mt-3">
+            @foreach (var p in products)
+            {
+                <div class="col-6 col-md-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@p.Name</h5>
+                            <p class="card-text text-muted">@p.Description</p>
+                            <div class="fw-bold">@p.Price.ToString("C")</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+    <footer class="mt-5 text-center text-muted">
+        <small>© @DateTime.Now.Year AmosWRN — Weather Forecast. Data provided for demonstration purposes.</small>
+    </footer>
+</div>

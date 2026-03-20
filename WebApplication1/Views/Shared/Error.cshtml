@@ -1,0 +1,68 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+    var timestamp = DateTime.UtcNow.ToString("u");
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" fill="none" viewBox="0 0 24 24" class="mb-3" aria-hidden="true">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="#dc3545" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 9v4" stroke="#dc3545" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 17h.01" stroke="#dc3545" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+
+                    <h1 class="display-6 text-danger">Something went wrong</h1>
+                    <p class="lead text-muted">We couldn't complete your request. You can try again or return to the homepage.</p>
+
+                    <div class="mb-4">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-lg me-2">Go to Home</a>
+                        <a href="/ping" class="btn btn-outline-secondary btn-lg">Check Server</a>
+                    </div>
+
+                    @if (Model?.ShowRequestId == true)
+                    {
+                        <div class="mb-2">
+                            <p class="mb-1 small text-muted">Request ID</p>
+                            <div class="d-inline-flex align-items-center bg-light border rounded px-3 py-2">
+                                <code id="requestId" class="me-2">@Model.RequestId</code>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyRequestId()">Copy</button>
+                            </div>
+                        </div>
+                        <p class="small text-muted">When contacting support, please include the Request ID and time: <strong>@timestamp</strong></p>
+                    }
+
+                    <hr />
+
+                    <p class="small text-muted mb-0">Need help? Contact <a href="mailto:support@amoswrn.example">support@amoswrn.example</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function copyRequestId() {
+            var el = document.getElementById('requestId');
+            if (!el) return;
+            var text = el.innerText || el.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function(){
+                    // optionally provide user feedback
+                });
+            } else {
+                // fallback
+                var textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try { document.execCommand('copy'); } catch (e) { }
+                document.body.removeChild(textarea);
+            }
+        }
+    </script>
+}
