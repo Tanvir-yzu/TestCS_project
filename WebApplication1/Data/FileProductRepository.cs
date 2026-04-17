@@ -64,5 +64,15 @@ namespace WebApplication1.Data
             Save();
             return product;
         }
+
+        public Product? Update(Product product)
+        {
+            if (!_products.ContainsKey(product.Id))
+                return null;
+
+            _products[product.Id] = product;
+            Save();
+            return product;
+        }
     }
 }

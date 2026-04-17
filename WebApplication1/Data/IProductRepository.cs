@@ -7,5 +7,6 @@ namespace WebApplication1.Data
         IEnumerable<Product> GetAll();
         Product? Get(int id);
         Product Add(Product product);
+        Product? Update(Product product);
     }
 }

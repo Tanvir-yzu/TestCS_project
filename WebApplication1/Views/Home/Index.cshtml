@@ -23,24 +23,38 @@
         <div class="col-md-5 text-center d-none d-md-block">
             <div class="card shadow-sm" style="max-width:320px; margin:auto;">
                 <div class="card-body">
-                    <h5 class="card-title">Now</h5>
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h2 class="mb-0">21°C</h2>
-                            <div class="text-muted">Partly Cloudy</div>
+                    @if (User?.Identity?.IsAuthenticated == true)
+                    {
+                        var username = User.Identity?.Name;
+                        var u = products.SelectMany(p => new[] { p }).FirstOrDefault(); // no-op to keep Razor happy
+                        <div class="d-flex align-items-center gap-3">
+                            <div>
+                                @{ 
+                                    var userRepo = Context.RequestServices.GetService(typeof(WebApplication1.Data.IUserRepository)) as WebApplication1.Data.IUserRepository;
+                                    var usr = userRepo?.GetByUsername(username ?? string.Empty);
+                                }
+                                @if (usr != null && !string.IsNullOrWhiteSpace(usr.AvatarPath))
+                                {
+                                    <img src="@usr.AvatarPath" style="width:96px; height:96px; object-fit:cover; border-radius:8px;" />
+                                }
+                                else
+                                {
+                                    <div style="width:96px; height:96px; background:#eee; display:flex; align-items:center; justify-content:center; border-radius:8px;">No avatar</div>
+                                }
+                            </div>
+                            <div class="text-start">
+                                <h5 class="mb-0">@username</h5>
+                                <div class="text-muted">@if (usr != null) { @usr.Email }</div>
+                                <div class="mt-2"><a class="btn btn-sm btn-outline-primary" asp-controller="Account" asp-action="Profile">Profile</a></div>
+                            </div>
                         </div>
-                        <div class="text-center">
-                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M6 14a4 4 0 0 1 8 0" stroke="#ffc107" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                <circle cx="12" cy="8" r="3" stroke="#ffc107" stroke-width="1.5"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <hr />
-                    <div class="d-flex justify-content-between text-muted small">
-                        <div>Wind: 8 km/h</div>
-                        <div>Humidity: 62%</div>
-                    </div>
+                    }
+                    else
+                    {
+                        <h5 class="card-title">Welcome</h5>
+                        <p class="text-muted">Sign in to manage products and your profile.</p>
+                        <div><a class="btn btn-primary" asp-controller="Account" asp-action="Login">Sign in</a></div>
+                    }
                 </div>
             </div>
         </div>
@@ -75,22 +89,71 @@
             </div>
         </div>
     </section>
+    <section id="add-product" class="mt-5">
+        <h3>Add product</h3>
 
-    <section id="forecast" class="mt-5">
-        <h3>7-day Forecast</h3>
-        <div class="row g-3 mt-3">
-            <!-- Example static cards for a 7-day forecast -->
-            @for (int i = 0; i < 7; i++)
-            {
-                <div class="col-6 col-md-3 col-lg-2">
-                    <div class="card text-center h-100">
-                        <div class="card-body py-3">
-                            <div class="text-muted small">@DateTime.Today.AddDays(i).ToString("ddd")</div>
-                            <div class="fw-bold mt-2">@((20 + i) % 30)°C</div>
-                            <div class="text-muted small">@((i % 3) == 0 ? "Sunny" : (i % 3 == 1 ? "Cloudy" : "Rain"))</div>
+        @if (User?.Identity?.IsAuthenticated == true)
+        {
+            <div class="card mt-3 p-3">
+                <form method="post" asp-controller="Home" asp-action="Create" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <input class="form-control" name="name" placeholder="Product name" />
+                        </div>
+                        <div class="col-md-4">
+                            <input class="form-control" name="price" type="number" step="0.01" placeholder="Price" />
+                        </div>
+                        <div class="col-md-4">
+                            <input class="form-control" name="images" type="file" multiple />
+                        </div>
+                        <div class="col-12 mt-2">
+                            <textarea class="form-control" name="description" placeholder="Short description"></textarea>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <button class="btn btn-success" type="submit">Add product</button>
                         </div>
                     </div>
+                </form>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted">You must <a asp-controller="Account" asp-action="Login">sign in</a> to add products.</p>
+        }
+    </section>
+
+    <section id="featured-products" class="mt-5">
+        <h3>Featured products</h3>
+        <div class="row g-3 mt-3">
+            @{
+                var featured = products.Take(4).ToList();
+            }
+
+            @if (!featured.Any())
+            {
+                <div class="col-12">
+                    <p class="text-muted">No featured products yet. Add a product to get started.</p>
                 </div>
+            }
+            else
+            {
+                @foreach (var p in featured)
+                {
+                    <div class="col-6 col-md-3">
+                        <div class="card h-100">
+                            @if (p.ImagePaths != null && p.ImagePaths.Count > 0)
+                            {
+                                <img src="@p.ImagePaths.First()" class="card-img-top product-image" />
+                            }
+                            <div class="card-body">
+                                <h5 class="card-title">@p.Name</h5>
+                                <p class="card-text text-muted">@p.Description</p>
+                                <div class="fw-bold">@p.Price.ToString("C")</div>
+                            </div>
+                        </div>
+                    </div>
+                }
             }
         </div>
     </section>
@@ -115,9 +178,21 @@
                 <div class="col-6 col-md-3">
                     <div class="card h-100">
                         <div class="card-body">
+                            @if (p.ImagePaths != null && p.ImagePaths.Count > 0)
+                            {
+                                <div class="mb-2 text-center">
+                                    <img src="@p.ImagePaths.First()" class="product-thumb" />
+                                </div>
+                            }
                             <h5 class="card-title">@p.Name</h5>
                             <p class="card-text text-muted">@p.Description</p>
                             <div class="fw-bold">@p.Price.ToString("C")</div>
+                            @if (User?.Identity?.IsAuthenticated == true)
+                            {
+                                <div class="mt-2">
+                                    <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@p.Id">Edit</a>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>

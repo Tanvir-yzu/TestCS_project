@@ -2,25 +2,42 @@
   {
     "Id": 1,
     "Name": "Tanvir",
-    "Description": "fdgds",
-    "Price": 200
+    "Description": "mango",
+    "Price": 200,
+    "ImagePaths": [
+      "/uploads/products/bd425ae6f9f94c8f9645828e000d7a8f.jpeg"
+    ]
   },
   {
     "Id": 2,
     "Name": "Tanvir",
     "Description": "dsfds",
-    "Price": 2000
+    "Price": 2000,
+    "ImagePaths": [
+      "/uploads/products/20ee5542e8cf4312aa33028ebd3d045c.jpeg"
+    ]
   },
   {
     "Id": 3,
     "Name": "Tanvirdfsdf",
     "Description": "fdfdf",
-    "Price": 200
+    "Price": 200,
+    "ImagePaths": []
   },
   {
     "Id": 4,
     "Name": "dsfds",
     "Description": "dfdskf",
-    "Price": 200
+    "Price": 200,
+    "ImagePaths": []
+  },
+  {
+    "Id": 5,
+    "Name": "Sad_Man",
+    "Description": null,
+    "Price": 50,
+    "ImagePaths": [
+      "/uploads/products/d9b90bcc376248d9827d409a5240a5ec.png"
+    ]
   }
 ]

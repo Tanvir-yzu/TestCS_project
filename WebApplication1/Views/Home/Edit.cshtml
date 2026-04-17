@@ -1,0 +1,51 @@
+@{
+    ViewData["Title"] = "Edit product";
+    var product = ViewData["Product"] as WebApplication1.Models.Product;
+}
+
+<h2>Edit product</h2>
+
+@if (product == null)
+{
+    <div class="text-danger">Product not found.</div>
+}
+else
+{
+    <form method="post" asp-action="Edit" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="@product.Id" />
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input class="form-control" name="name" value="@product.Name" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" name="description">@product.Description</textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Price</label>
+            <input class="form-control" type="number" step="0.01" name="price" value="@product.Price" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Existing images</label>
+            <div class="d-flex gap-2 flex-wrap">
+                @foreach (var ip in product.ImagePaths ?? Enumerable.Empty<string>())
+                {
+                    <div class="text-center">
+                        <img src="@ip" class="product-thumb" />
+                        <div class="form-check mt-1">
+                            <input class="form-check-input" type="checkbox" name="removeImagePaths" value="@ip" id="rem_@ip.GetHashCode()" />
+                            <label class="form-check-label" for="rem_@ip.GetHashCode()">Remove</label>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Add images</label>
+            <input class="form-control" type="file" name="images" multiple />
+        </div>
+        <button class="btn btn-primary" type="submit">Save</button>
+        <a class="btn btn-link" asp-action="Index">Cancel</a>
+    </form>
+}

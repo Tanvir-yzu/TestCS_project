@@ -33,9 +33,20 @@
                     <ul class="navbar-nav">
                         @if (User?.Identity?.IsAuthenticated == true)
                         {
+                            var userRepo = Context.RequestServices.GetService(typeof(WebApplication1.Data.IUserRepository)) as WebApplication1.Data.IUserRepository;
+                            var usr = userRepo?.GetByUsername(User.Identity?.Name ?? string.Empty);
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">@User.Identity.Name</a>
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    @if (usr?.AvatarPath != null)
+                                    {
+                                        <img src="@usr.AvatarPath" alt="avatar" class="avatar-xs" style="margin-right:8px;" />
+                                    }
+                                    <span>@User.Identity.Name</span>
+                                </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">Profile</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Home" asp-action="Create">Add product</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
                                     <li><form method="post" asp-controller="Account" asp-action="Logout"><button type="submit" class="dropdown-item">Sign out</button></form></li>
                                 </ul>
                             </li>

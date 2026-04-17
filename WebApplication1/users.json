@@ -1,0 +1,14 @@
+[
+  {
+    "Username": "sadman",
+    "Email": "sadman@gmail.com",
+    "PasswordHash": "MTIzNA==",
+    "AvatarPath": "/uploads/avatars/107d79d52f7149f18b22c45eb2423f9f.ico"
+  },
+  {
+    "Username": "Tanvir",
+    "Email": "admin@gmail.com",
+    "PasswordHash": "MTIzNA==",
+    "AvatarPath": "/uploads/avatars/d106faf07b7144c595f1202fdd3af583.jpeg"
+  }
+]

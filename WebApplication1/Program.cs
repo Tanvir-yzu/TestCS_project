@@ -28,6 +28,8 @@ namespace WebApplication1
             // Register product repository (file-backed JSON) for simple persistence without
             // requiring EF/DB packages. This keeps products across restarts in a local file.
             builder.Services.AddSingleton<WebApplication1.Data.IProductRepository, WebApplication1.Data.FileProductRepository>();
+            // Register user repository so registered users persist to users.json
+            builder.Services.AddSingleton<WebApplication1.Data.IUserRepository, WebApplication1.Data.FileUserRepository>();
 
             var app = builder.Build();
 

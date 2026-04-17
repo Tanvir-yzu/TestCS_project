@@ -8,9 +8,10 @@
 
     <form method="post" asp-controller="Account" asp-action="Login" class="mt-4">
         <input type="hidden" name="returnUrl" value="@returnUrl" />
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
         <div class="mb-3">
-            <label class="form-label">Username</label>
-            <input name="username" class="form-control" />
+            <label class="form-label">Email</label>
+            <input name="email" type="email" class="form-control" value="@(ViewData["Email"] ?? string.Empty)" />
         </div>
         <div class="mb-3">
             <label class="form-label">Password</label>

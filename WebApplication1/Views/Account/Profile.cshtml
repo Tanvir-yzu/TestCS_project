@@ -1,0 +1,46 @@
+@{
+    ViewData["Title"] = "Profile";
+    var user = ViewData["User"] as WebApplication1.Models.User;
+}
+
+<h2>Profile</h2>
+
+@if (user == null)
+{
+    <div class="text-danger">User not found.</div>
+}
+else
+{
+    <div class="card p-3" style="max-width:420px;">
+        <div class="d-flex align-items-center gap-3">
+            <div>
+                @if (!string.IsNullOrWhiteSpace(user.AvatarPath))
+                {
+                    <img src="@user.AvatarPath" class="avatar-lg" />
+                }
+                else
+                {
+                    <div style="width:96px; height:96px; background:#eee; display:flex; align-items:center; justify-content:center; border-radius:8px;">No avatar</div>
+                }
+            </div>
+            <div>
+                <h5 class="mb-0">@user.Username</h5>
+                <div class="text-muted">@user.Email</div>
+            </div>
+        </div>
+
+        <hr />
+        <form method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="All" class="text-danger mb-2"></div>
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input class="form-control" name="newUsername" value="@user.Username" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Change avatar</label>
+                <input type="file" name="avatar" class="form-control" />
+            </div>
+            <button class="btn btn-primary" type="submit">Upload</button>
+        </form>
+    </div>
+}

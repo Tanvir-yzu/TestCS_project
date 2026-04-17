@@ -2,13 +2,22 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Linq;
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 
 namespace WebApplication1.Controllers
 {
     public class AccountController : Controller
     {
-        // Very small in-memory user store for demo purposes only
-        private static readonly Dictionary<string, (string PasswordHash, string Email)> _users = new();
+        private readonly WebApplication1.Data.IUserRepository _userRepo;
+        private readonly IWebHostEnvironment _env;
+
+        public AccountController(WebApplication1.Data.IUserRepository userRepo, IWebHostEnvironment env)
+        {
+            _userRepo = userRepo;
+            _env = env;
+        }
 
         public IActionResult Register()
         {
@@ -16,23 +25,47 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost]
-        public IActionResult Register(string username, string email, string password)
+        public IActionResult Register(string username, string email, string password, string confirmPassword)
         {
+            // Preserve entered values when redisplaying the form on error
+            ViewData["Username"] = username;
+            ViewData["Email"] = email;
+
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
                 ModelState.AddModelError("", "Username and password are required.");
                 return View();
             }
 
-            if (_users.ContainsKey(username))
+            if (password != confirmPassword)
+            {
+                ModelState.AddModelError("", "Passwords do not match.");
+                return View();
+            }
+
+            if (_userRepo.GetByUsername(username) != null)
             {
                 ModelState.AddModelError("", "User already exists.");
                 return View();
             }
 
+            // Ensure email is unique
+            if (!string.IsNullOrWhiteSpace(email) && _userRepo.GetByEmail(email) != null)
+            {
+                ModelState.AddModelError("", "Email already in use.");
+                return View();
+            }
+
             // Really simple hash for example only (do NOT use in production)
             var passwordHash = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(password));
-            _users[username] = (passwordHash, email);
+            var user = new WebApplication1.Models.User
+            {
+                Username = username,
+                Email = email ?? string.Empty,
+                PasswordHash = passwordHash
+            };
+
+            _userRepo.Add(user);
 
             return RedirectToAction("Login");
         }
@@ -42,35 +75,36 @@ namespace WebApplication1.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
-
         [HttpPost]
-        public async Task<IActionResult> Login(string username, string password, string returnUrl = null)
+        public async Task<IActionResult> Login(string email, string password, string returnUrl = null)
         {
-            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            ViewData["ReturnUrl"] = returnUrl;
+            ViewData["Email"] = email;
+
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
-                ModelState.AddModelError("", "Invalid username or password.");
-                ViewData["ReturnUrl"] = returnUrl;
+                ModelState.AddModelError("", "Invalid email or password.");
                 return View();
             }
 
-            if (!_users.TryGetValue(username, out var info))
+            var existing = _userRepo.GetByEmail(email);
+            if (existing == null)
             {
-                ModelState.AddModelError("", "Invalid username or password.");
-                ViewData["ReturnUrl"] = returnUrl;
+                ModelState.AddModelError("", "Invalid email or password.");
                 return View();
             }
 
             var attempted = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(password));
-            if (attempted != info.PasswordHash)
+            if (attempted != existing.PasswordHash)
             {
-                ModelState.AddModelError("", "Invalid username or password.");
+                ModelState.AddModelError("", "Invalid email or password.");
                 return View();
             }
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, username),
-                new Claim(ClaimTypes.Email, info.Email ?? string.Empty)
+                new Claim(ClaimTypes.Name, existing.Username),
+                new Claim(ClaimTypes.Email, existing.Email ?? string.Empty)
             };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -89,6 +123,99 @@ namespace WebApplication1.Controllers
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
+        }
+
+        [HttpGet]
+        public IActionResult Profile()
+        {
+            if (!User?.Identity?.IsAuthenticated == true)
+                return RedirectToAction("Login");
+
+            var username = User.Identity?.Name;
+            if (string.IsNullOrWhiteSpace(username))
+                return RedirectToAction("Login");
+
+            var user = _userRepo.GetByUsername(username!);
+            if (user == null) return NotFound();
+
+            ViewData["User"] = user;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Profile(string? newUsername, IFormFile? avatar)
+        {
+            if (!User?.Identity?.IsAuthenticated == true)
+                return RedirectToAction("Login");
+
+            var username = User.Identity?.Name;
+            if (string.IsNullOrWhiteSpace(username))
+                return RedirectToAction("Login");
+
+            var user = _userRepo.GetByUsername(username!);
+            if (user == null) return NotFound();
+
+            var oldUsername = user.Username;
+
+            // handle username change
+            if (!string.IsNullOrWhiteSpace(newUsername) && newUsername != oldUsername)
+            {
+                // ensure new username not taken
+                if (_userRepo.GetByUsername(newUsername) != null)
+                {
+                    ModelState.AddModelError("", "Username already taken.");
+                    ViewData["User"] = user;
+                    return View();
+                }
+
+                user.Username = newUsername;
+            }
+
+            if (avatar != null && avatar.Length > 0)
+            {
+                try
+                {
+                    var uploads = Path.Combine(_env.WebRootPath ?? string.Empty, "uploads", "avatars");
+                    if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
+                    var ext = Path.GetExtension(avatar.FileName);
+                    var fn = Guid.NewGuid().ToString("N") + ext;
+                    var dest = Path.Combine(uploads, fn);
+                    using (var fs = System.IO.File.Create(dest))
+                    {
+                        avatar.CopyTo(fs);
+                    }
+                    user.AvatarPath = $"/uploads/avatars/{fn}";
+                    _userRepo.Update(user, oldUsername);
+                }
+                catch
+                {
+                    // ignore for demo
+                }
+            }
+            else
+            {
+                // if only username changed
+                if (user.Username != oldUsername)
+                {
+                    _userRepo.Update(user, oldUsername);
+                }
+            }
+
+            // if username changed we need to refresh auth cookie
+            if (user.Username != oldUsername)
+            {
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.Email, user.Email ?? string.Empty)
+                };
+                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var principal = new ClaimsPrincipal(identity);
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+            }
+
+            ViewData["User"] = user;
+            return View();
         }
     }
 }
